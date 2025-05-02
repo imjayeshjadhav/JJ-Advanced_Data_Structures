@@ -116,8 +116,8 @@ vector<vector<int>> countMinSketch(d, vector<int>(w, 0));
 int hashCMS(string s, int i) {
     int hash = 0;
     int a = 33 + 17 * i;  // Make it different per row
-    for (char c : s) {
-        hash = (a * hash + c) % w;  // Simple polynomial rolling hash
+    for (int j = 0; j < s.length(); ++j) {
+        hash = (a * hash + s[j]) % w;  // Simple polynomial rolling hash
     }
     return (hash + w) % w;  // Ensure non-negative
 }
@@ -133,11 +133,6 @@ void insertCountMinSketch(string name) {
     cout << endl;
     cout << "Element Inserted" << endl;
 
-    // Now print counts at those specific indices instead of just first 10 columns
-    for (int i = 0; i < d; i++) {
-        int hash = hashCMS(name, i);
-        cout << "Row " << i + 1 << " [" << hash << "]: " << countMinSketch[i][hash] << endl;
-    }
 }
 
 // Estimate frequency of an element in Count-Min Sketch
