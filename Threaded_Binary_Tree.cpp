@@ -138,19 +138,25 @@ void postorder(Node* root)
 
 void NonRecursivePreOrder(Node* root) {
     Node* current = root;
-    
-    while (current != nullptr) {
-        cout << current->data << " ";
 
-        if (!current->lth && current->left) {
+    while (current != nullptr) {
+        cout<<current->data<<" ";
+
+        if (!current->lth) {
             current = current->left;
-        }
-        else {
+        } else if (!current->rth) {
             current = current->right;
+        } else {
+            while (current != nullptr && current->rth) {
+                current = current->right;
+            }
+            if (current != nullptr)
+                current = current->right;
         }
     }
     cout << endl;
 }
+
 
 
 void NonRecursiveInOrder(Node* root) {
