@@ -1,139 +1,155 @@
-#include<iostream>             // For standard input and output
-#include <vector>              // For using vectors to store edges
-#include <climits>            // For using INT_MAX as infinite
-#include <cstring>            // For memset if needed
-#include <algorithm>          // For sorting edges in Kruskal's algorithm
-#define INF INT_MAX           // Define INF as maximum integer value to represent no edge
+#include<iostream>
+#include<vector>
+#include<climits>
+#include<algorithm>
+#define INF INT_MAX
 
 using namespace std;
 
-// Structure to represent an edge for Kruskal's algorithm
 struct Edge {
-    int src, dest, weight;    // src = source, dest = destination, weight = edge weight
+    int src, dest, weight;
 };
 
-// Function to find the root of a set (with path compression)
+// Path compression
 int findParent(int parent[], int i) {
-    if (parent[i] != i)              // If i is not the root of its set
-        parent[i] = findParent(parent, parent[i]); // Recursively find root and compress path
-    return parent[i];                // Return root
+    if (parent[i] != i)
+        parent[i] = findParent(parent, parent[i]);
+    return parent[i];
 }
 
-// Function to do union of two sets (by rank)
+// Union by rank
 void unionSets(int parent[], int rank[], int x, int y) {
-    int xroot = findParent(parent, x); // Find root of x
-    int yroot = findParent(parent, y); // Find root of y
+    int xroot = findParent(parent, x);
+    int yroot = findParent(parent, y);
 
-    // Attach smaller rank tree under root of higher rank tree
     if (rank[xroot] < rank[yroot])
         parent[xroot] = yroot;
     else if (rank[xroot] > rank[yroot])
         parent[yroot] = xroot;
     else {
-        parent[yroot] = xroot; // Arbitrarily attach y to x
-        rank[xroot]++;         // Increase rank of new root
+        parent[yroot] = xroot;
+        rank[xroot]++;
     }
 }
 
-int main() {
-    int V;                     // Number of vertices
-    cin >> V;
-
-    int graph[V][V];           // Adjacency matrix of the graph
-    vector<Edge> edges;        // To store edges for Kruskal's algorithm
-
-    // Taking input and preparing graph is skipped as per your request
-
-    int parent[V];             // Stores parent of each vertex in the MST
-    int key[V];                // Stores minimum edge weight to connect to MST
-    bool mstSet[V];            // true if vertex is included in MST
+// Prim's Algorithm
+void primMST(int V, int graph[100][100]) {
+    int parent[V];
+    int key[V];
+    bool mstSet[V];
 
     for (int i = 0; i < V; ++i) {
-        key[i] = INF;          // Initialize all key values to INF
-        mstSet[i] = false;     // Initially, no vertex is in MST
+        key[i] = INF;
+        mstSet[i] = false;
     }
 
-    key[0] = 0;                // Start from the first vertex (key = 0 so it's picked first)
-    parent[0] = -1;            // Root node has no parent
+    key[0] = 0;
+    parent[0] = -1;
 
-    // Run the algorithm V-1 times (MST has V-1 edges)
     for (int count = 0; count < V - 1; ++count) {
-        int u = -1;            // To store index of minimum key vertex not in MST
-
-        // Find the vertex with the minimum key not yet in MST
+        int u = -1;
         for (int v = 0; v < V; ++v) {
             if (!mstSet[v]) {
                 if (u == -1 || key[v] < key[u]) {
-                    u = v;     // Update u to the new minimum key vertex
+                    u = v;
                 }
             }
         }
 
-        mstSet[u] = true;      // Include the selected vertex in MST
+        mstSet[u] = true;
 
-        // Update keys and parent of all adjacent vertices
         for (int v = 0; v < V; ++v) {
-            // Update only if there is an edge and vertex v is not in MST and weight is smaller
             if (graph[u][v] != INF && !mstSet[v] && graph[u][v] < key[v]) {
-                parent[v] = u;         // Update parent to u
-                key[v] = graph[u][v];  // Update key to the new minimum weight
+                parent[v] = u;
+                key[v] = graph[u][v];
             }
         }
     }
 
     cout << "\n--- Prim's Algorithm ---\n";
     cout << "Edges in MST:\n";
-    int minCost = 0;                    // To store total weight of MST
-
-    // Print the MST stored in parent[]
+    int minCost = 0;
     for (int i = 1; i < V; ++i) {
         cout << parent[i] << " - " << i << " Weight = " << graph[i][parent[i]] << endl;
-        minCost += graph[i][parent[i]];  // Add weight to total cost
+        minCost += graph[i][parent[i]];
     }
-
     cout << "Cost of Minimum Spanning Tree (Prim's): " << minCost << endl;
+}
 
-    // Sort all edges by increasing weight
+// Kruskal's Algorithm
+void kruskalMST(int V, vector<Edge> &edges) {
     sort(edges.begin(), edges.end(), [](Edge a, Edge b) {
         return a.weight < b.weight;
     });
 
-    vector<Edge> result;       // To store final MST edges
-    int parentK[V];            // Parent array for union-find
-    int rank[V];               // Rank array to keep union tree balanced
-
+    int parent[V], rank[V];
     for (int i = 0; i < V; i++) {
-        parentK[i] = i;        // Initially, each vertex is its own parent
-        rank[i] = 0;           // Rank is 0 for all
+        parent[i] = i;
+        rank[i] = 0;
     }
 
-    int edgeCount = 0;         // Number of edges included in MST
-    int kruskalCost = 0;       // Total cost of MST
+    vector<Edge> result;
+    int edgeCount = 0, kruskalCost = 0;
 
-    // Iterate over sorted edges
     for (Edge e : edges) {
-        int u = findParent(parentK, e.src);   // Find root of source
-        int v = findParent(parentK, e.dest);  // Find root of destination
+        int u = findParent(parent, e.src);
+        int v = findParent(parent, e.dest);
 
-        // If including this edge doesn't form a cycle
         if (u != v) {
-            result.push_back(e);              // Add edge to MST
-            kruskalCost += e.weight;          // Add weight to total cost
-            unionSets(parentK, rank, u, v);   // Union the two sets
-            edgeCount++;                      // Increment edge count
-            if (edgeCount == V - 1) break;    // Stop if MST is complete
+            result.push_back(e);
+            kruskalCost += e.weight;
+            unionSets(parent, rank, u, v);
+            edgeCount++;
+            if (edgeCount == V - 1) break;
         }
     }
 
     cout << "\n--- Kruskal's Algorithm ---\n";
     cout << "Edges in MST:\n";
-
-    // Print the MST edges
     for (auto e : result) {
         cout << e.src << " - " << e.dest << " Weight = " << e.weight << endl;
     }
-
     cout << "Cost of Minimum Spanning Tree (Kruskal's): " << kruskalCost << endl;
+}
 
-    return 0;  // End of program
+int main() {
+    int V;
+    cout << "Enter number of vertices: ";
+    cin >> V;
+
+    int graph[100][100];
+    vector<Edge> edges;
+
+    cout << "Enter adjacency matrix (enter INF = " << INF << " for no edge):\n";
+    for (int i = 0; i < V; ++i) {
+        for (int j = 0; j < V; ++j) {
+            cin >> graph[i][j];
+            if (i < j && graph[i][j] != INF) {
+                Edge e = {i, j, graph[i][j]};
+                edges.push_back(e);
+            }
+        }
+    }
+
+    int choice;
+    do {
+        cout << "\nMenu:\n1. Prim's Algorithm\n2. Kruskal's Algorithm\n3. Exit\nEnter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                primMST(V, graph);
+                break;
+            case 2:
+                kruskalMST(V, edges);
+                break;
+            case 3:
+                cout << "Exiting...\n";
+                break;
+            default:
+                cout << "Invalid choice. Try again.\n";
+        }
+    } while (choice != 3);
+
+    return 0;
 }
