@@ -137,6 +137,9 @@ void postorder(Node* root)
 }
 
 void NonRecursivePreOrder(Node* root) {
+    if (root==nullptr){
+        return;
+    }
     Node* current = root;
 
     while (current != nullptr) {
@@ -156,8 +159,6 @@ void NonRecursivePreOrder(Node* root) {
     }
     cout << endl;
 }
-
-
 
 void NonRecursiveInOrder(Node* root) {
     if (root == nullptr)
@@ -179,7 +180,6 @@ void NonRecursiveInOrder(Node* root) {
     }
     cout << endl;
 }
-
 
 void NonRecursivePostOrder(Node* root) {
     if (!root) return;
